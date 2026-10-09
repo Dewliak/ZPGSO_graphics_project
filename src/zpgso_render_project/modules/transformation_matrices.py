@@ -1,7 +1,7 @@
 from typing import List
 
-from modules.vec4 import Vec4
-from modules.mat4 import Mat4
+from .vec4 import Vec4
+from .mat4 import Mat4
 
 import numpy as np
 import math

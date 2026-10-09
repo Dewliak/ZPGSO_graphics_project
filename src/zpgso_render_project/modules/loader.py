@@ -1,6 +1,6 @@
 from typing import List, Tuple
 
-from modules.vec4 import Vec4
+from .vec4 import Vec4
 
 def load_obj_file(filename:str) -> Tuple[List[Vec4], List[Tuple[int, int, int]]]:
     # accept only v and f lines

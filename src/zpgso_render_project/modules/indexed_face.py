@@ -1,6 +1,6 @@
 from typing import List, Tuple
 
-from modules.vec4 import Vec4
+from .vec4 import Vec4
 
 
 class IndexedFace:

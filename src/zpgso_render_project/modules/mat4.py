@@ -1,5 +1,6 @@
+# only __repr__ was implemented by llm
 import numpy
-from modules.vec4 import Vec4
+from .vec4 import Vec4
 
 class Mat4:
     MATRIX_SIZE = 4
