@@ -1,0 +1,62 @@
+from typing import List, Tuple
+
+from modules.vec4 import Vec4
+
+def load_obj_file(filename:str) -> Tuple[List[Vec4], List[Tuple[int, int, int]]]:
+    # accept only v and f lines
+
+    vertices:List[Vec4] = []
+    faces:List[Tuple[int,int,int]] = []
+
+    with open(filename,"r") as f:
+        for line in f.readlines():
+            parameters = line.split()
+
+            if(len(parameters) == 0):
+                continue
+
+            match(parameters[0]):
+                case "v":
+                    
+                    if(len(parameters)) != 4: # v x y z, throw error
+                        raise ValueError("v vertex invalid number of paramters (!= 3) !")
+                    
+                    try:
+                        x, y, z = map(float, parameters[1:])
+
+                    except ValueError:
+                        raise ValueError("v vertex invalid formats, not all parameters are floats !")
+
+                    vertices.append(Vec4(x, y, z))
+                case "f":
+                    # !!! has the assumption that we have all the vertices !!!
+
+                    if(len(parameters)) != 4: # f i1 i2 i3, throw error
+                        raise ValueError("f face invalid number of paramters (!= 3) !")
+                    
+                    try:
+                        indexes:List[int] = list(map(int, parameters[1:]))
+                    except ValueError:
+                        raise ValueError("f face, invalid types, not all parameters and ints !")
+
+                    #check if they arte valid index, since they are 1-based
+                    
+                    actual_indexes:List[int] = []
+
+                    for index in indexes:
+                        if(index == 0):
+                            raise ValueError("face index cannot be 0, they are 1-based")
+
+                        actual = index - 1 if index > 0 else len(vertices) + index
+
+                        if(actual < 0 or actual >= len(vertices)):
+                            raise ValueError("face index out of range")
+
+                        actual_indexes.append(actual)
+                
+                    faces.append(tuple(actual_indexes))
+                    
+                case "_": #ignore this case
+                    continue
+
+    return vertices, faces

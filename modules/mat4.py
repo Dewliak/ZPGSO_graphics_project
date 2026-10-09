@@ -1,0 +1,56 @@
+import numpy
+from modules.vec4 import Vec4
+
+class Mat4:
+    MATRIX_SIZE = 4
+    def __init__(self, 
+                 line_1:Vec4,
+                 line_2:Vec4,
+                 line_3:Vec4,
+                 line_4:Vec4):
+
+        self._matrix = numpy.array([line_1._vector,line_2._vector,line_3._vector,line_4._vector], dtype=float)
+        
+    def __mul__(self, other):
+
+        if isinstance(other, Vec4):
+            # since Mat4 is 4x4 and Vec4 is 4x1 => we get Vec4
+            vector_parameters = []
+            for i in range(self.MATRIX_SIZE): # matrix row
+                total = 0
+                for j in range(self.MATRIX_SIZE): # inside row which element
+                    total += self._matrix[i, j]*other[j]
+                vector_parameters.append(total)
+
+            return Vec4(*vector_parameters)
+
+        elif isinstance(other, Mat4):
+
+            matrix_lines = []
+
+            for line in range(self.MATRIX_SIZE):
+            
+                matrix_total_line = []
+                for column in range(self.MATRIX_SIZE):    
+                    total = 0
+                    for element in range(self.MATRIX_SIZE):
+                        total += self._matrix[line, element]*other[element, column]
+                    matrix_total_line.append(total)
+                matrix_lines.append(Vec4(*matrix_total_line))
+
+            return Mat4(*matrix_lines)
+    
+            
+        else:
+            raise NotImplementedError
+
+    def __getitem__(self, key: tuple[int, int]) -> float:
+        i, j = key
+        return self._matrix[i, j]
+
+    def __repr__(self) -> str:
+        rows = [
+            "  [" + ", ".join(f"{value:8.3f}" for value in row) + "]"
+            for row in self._matrix
+        ]
+        return "Mat4(\n" + "\n".join(rows) + "\n)"
