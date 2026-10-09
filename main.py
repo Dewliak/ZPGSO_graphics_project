@@ -1,4 +1,4 @@
-from src.zpgso_render_project.modules.gui import RendererGUI
+from src.zpgso_graphics_project.modules.gui import RendererGUI
 import tkinter as tk
 
 
