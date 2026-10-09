@@ -16,7 +16,7 @@ Clone the repository and navigate to the project directory:
 
 ```bash
 git clone https://github.com/Dewliak/ZPGSO_graphics_project/tree/master
-cd zpgso-render-project
+cd zpgso-graphics-project
 ```
 
 Install the project dependencies:
