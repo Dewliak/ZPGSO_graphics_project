@@ -47,28 +47,5 @@ class DirectionalLightSource(LightSource):
         return self.intensity
 
     def get_light_direction(self, point: Vec4) -> Vec4:
-        return self.direction
+        return normalize(self.direction)
 
-@dataclass
-class SpotLightSource(LightSource):
-    """
-                    I_0*(D dot L)
-        I_L = ---------------------
-                k_c + k_l*d + k_q+d^2
-
-        D is the direciton of Light
-        L is the object light vector
-    """
-    direction: Vec4 # should make a check for w=0
-    position: Vec4 #should make acheck for w=1
-    k_c: float
-    k_l: float
-    k_q: float
-
-    def calculate_intensity(self, point: Vec4) -> float:
-        object_vector = point - self.position
-        distance = euclidean_distance(point, self.position)
-        return (self.intensity*dot_product(self.direction, object_vector) )  / (self.k_c + self.k_l*distance + self.k_q*distance*distance)
-
-    def get_light_direction(self, point: Vec4) -> Vec4:
-        return self.direction

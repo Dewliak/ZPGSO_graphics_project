@@ -35,14 +35,14 @@ def load_obj_file(filename:str) -> Tuple[List[Vec4], List[Tuple[int, int, int]]]
                         raise ValueError("f face invalid number of paramters (!= 3) !")
                     
                     try:
-                        indexes:List[int] = list(map(int, parameters[1:]))
+                        i1,i2,i3 = list(map(int, parameters[1:]))
                     except ValueError:
                         raise ValueError("f face, invalid types, not all parameters and ints !")
-
+                    indexes: tuple[int,int,int] = (i1,i2,i3)
                     #check if they arte valid index, since they are 1-based
                     
                     actual_indexes:List[int] = []
-
+                    
                     for index in indexes:
                         if(index == 0):
                             raise ValueError("face index cannot be 0, they are 1-based")
@@ -54,7 +54,7 @@ def load_obj_file(filename:str) -> Tuple[List[Vec4], List[Tuple[int, int, int]]]
 
                         actual_indexes.append(actual)
                 
-                    faces.append(tuple(actual_indexes))
+                    faces.append((actual_indexes[0],actual_indexes[1],actual_indexes[2]))
                     
                 case "_": #ignore this case
                     continue

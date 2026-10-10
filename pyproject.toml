@@ -1,11 +1,8 @@
 [project]
 name = "zpgso-graphics-project"
 version = "0.1.0"
-description = "Add your description here"
+description = "A 3D graphics renderer implemented in Python"
 readme = "README.md"
-authors = [
-    { name = "dewliak", email = "veres.z.benedek@gmail.com" }
-]
 requires-python = ">=3.11"
 dependencies = [
     "numpy>=2.4.6",

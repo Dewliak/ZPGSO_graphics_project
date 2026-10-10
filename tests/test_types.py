@@ -2,8 +2,8 @@
 import unittest
 import numpy as np
 
-from zpgso_render_project.modules.vec4 import Vec4
-from zpgso_render_project.modules.mat4 import Mat4
+from zpgso_graphics_project.modules.vec4 import Vec4
+from zpgso_graphics_project.modules.mat4 import Mat4
 
 
 class TestVec4(unittest.TestCase):
