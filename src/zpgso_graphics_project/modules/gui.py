@@ -7,9 +7,16 @@ from typing import Tuple
 
 from .loader import load_obj_file 
 from .mat4 import Mat4
-from .vec4 import Vec4
+from .vec4 import Vec4, normalize, cross_product, dot_product
 from .transformation_matrices import *
 from .indexed_face import IndexedFace
+
+from .utilities import rgb_to_hex
+
+from .material import Material
+from .light_types import LightSource, SpotLightSource, DirectionalLightSource, PointLightSource
+from .lightning_model import BlinnPhongModel
+
 
 SCREEN_WIDTH = 950
 SCREEN_HEIGHT = 650
@@ -26,15 +33,40 @@ WINDOW_R = 10
 WINDOW_L = 10
 WINDOW_T = 7.5
 WINDOW_B = 7.5
+
+WIREFRAME = False
+
+OBJECT_TRANSFORMATION = get_identity_matrix()
+VIEW_TRANSFORMATION = combine_transformation_matrices([
+        get_camera_transformation_matrix(camera_pos=CAMERA_POSITION), # transform for camera
+        ])
+PROJECTION_TRANSFORMATION = combine_transformation_matrices([
+        get_pixel_transformation_matrix(WIDTH,HEIGHT), # pixel conversion
+        get_orthographic_transformation_matrix(-WINDOW_L,WINDOW_R,WINDOW_T, -WINDOW_B), # ortographic projection
+        ])
+
 WORLD_TRANSFORMATION = combine_transformation_matrices([
         get_pixel_transformation_matrix(WIDTH,HEIGHT), # pixel conversion
         get_orthographic_transformation_matrix(-WINDOW_L,WINDOW_R,WINDOW_T, -WINDOW_B), # ortographic projection
         get_camera_transformation_matrix(camera_pos=CAMERA_POSITION), # transform for camera
         ])
 
-OBJECT_TRANSFORMATION = get_identity_matrix()
+default_blue = Material(
+                            color=(50, 100, 220), 
+                            K_A=0.15,
+                            K_D=0.75,
+                            K_S=0.35,
+                            specular_exponent=32,
+                        )
 
-
+default_point_light = PointLightSource(
+    position=Vec4(0, -1, 0, 1.0),
+    intensity=1,
+    k_c=1,
+    k_l=0.02,
+    k_q=0.002,
+)
+VIEW_DIRECTION = Vec4(0.0, 0.0, 1.0, 0.0)
 class RendererGUI:
     def __init__(self, root: tk.Tk):
         self.root = root
@@ -49,7 +81,7 @@ class RendererGUI:
         self.vertices = []
         self.faces = []
 
-
+        self.shader_model = BlinnPhongModel()
 
         # Top toolbar
         toolbar = tk.Frame(root, padx=10, pady=10)
@@ -200,25 +232,71 @@ class RendererGUI:
         # Drawing the model will go here later.
         self.draw_objects()
 
-    def draw_objects(self):
-        self.canvas.delete("model")
-        vertices = self.indexed_face.get_vertices()
 
+    def transform_points(self) -> List[Tuple[Vec4, Vec4, Vec4, Vec4, Vec4]]: # p1,p2,p3, normal, center
+        vertices = self.indexed_face.get_vertices()
         
-        
+        points = []        
+                
         for face in self.indexed_face.get_faces():
             p1:Vec4 = vertices[face[0]]
             p2:Vec4 = vertices[face[1]]
             p3:Vec4 = vertices[face[2]]
 
+            p1 = VIEW_TRANSFORMATION * OBJECT_TRANSFORMATION*p1 # type: ignore
+            p2 = VIEW_TRANSFORMATION * OBJECT_TRANSFORMATION*p2 # type: ignore
+            p3 = VIEW_TRANSFORMATION * OBJECT_TRANSFORMATION*p3 # type: ignore
 
-            p1 = WORLD_TRANSFORMATION*OBJECT_TRANSFORMATION*p1
-            p2 = WORLD_TRANSFORMATION*OBJECT_TRANSFORMATION*p2
-            p3 = WORLD_TRANSFORMATION*OBJECT_TRANSFORMATION*p3
 
-            self.draw_line(p1,p2)
-            self.draw_line(p2,p3)
-            self.draw_line(p3,p1)
+            # back-face culling
+            N = normalize(cross_product(p2 - p1, p3 - p1 ))
+            V = Vec4(0,0,1,0) # w=0 since its a vector
+
+            
+
+            if(dot_product(N,V) <= 0): # we only draw a face iff dot_product(N,V) > 0, hence the negation skip
+                continue
+
+
+            
+            center = Vec4(
+                (p1[0] + p2[0] + p3[0]) / 3,
+                (p1[1] + p2[1] + p3[1]) / 3,
+                (p1[2] + p2[2] + p3[2]) / 3,
+                1,
+            )
+
+            p1 = PROJECTION_TRANSFORMATION *p1 # type: ignore
+            p2 = PROJECTION_TRANSFORMATION *p2 # type: ignore
+            p3 = PROJECTION_TRANSFORMATION *p3 # type: ignore
+
+
+            points.append(tuple([p1,p2,p3,N,center]))
+
+
+        return points
+            
+
+    def draw_objects(self):
+        global WIREFRAME
+
+        # changing in to so ti only draws to already having points
+        self.canvas.delete("model")
+
+
+        points = self.transform_points()
+
+        for polygon in points:
+            #print(triplet)
+            p1,p2,p3,_,_ = polygon
+
+            if WIREFRAME:
+                self.draw_line(p1,p2)
+                self.draw_line(p2,p3)
+                self.draw_line(p3,p1)
+            else: #draw polygons
+                self.draw_triangle(polygon)
+        
 
 
     def draw_line(self,p1: Vec4, p2: Vec4):
@@ -227,18 +305,33 @@ class RendererGUI:
         x1,y1 = p1[0], p1[1]
         x2,y2 = p2[0], p2[1]
 
-        self.canvas.create_line(x1,y1,x2,y2, fill=LINE_COLOR, width=LINE_WIDTH, tag="model")
+        self.canvas.create_line(x1,y1,x2,y2, fill=LINE_COLOR, width=LINE_WIDTH, tag="model") # type: ignore
 
-    def draw_triangle(self,points: Tuple[Vec4, Vec4, Vec4] ):
+    def draw_triangle(self,polygon: Tuple[Vec4, Vec4, Vec4, Vec4, Vec4] ):
+        """
+        points: p1,p2,p3, normal, center
+        """
+        global VIEW_DIRECTION
 
-        x1,y1 = points[0][0], points[0][1]
-        x2,y2 = points[1][0], points[1][1]
-        x3,y3 = points[2][0], points[2][1]
+        x1,y1 = polygon[0][0], polygon[0][1]
+        x2,y2 = polygon[1][0], polygon[1][1]
+        x3,y3 = polygon[2][0], polygon[2][1]
+        normal = polygon[3]
+        center = polygon[4]
+
+        color = self.shader_model.shade(
+            point=center,
+            normal=normal,
+            angle_of_viewer=VIEW_DIRECTION,
+            light_source=default_point_light,
+            material=default_blue
+        )
+
         
         self.canvas.create_polygon(
             x1,y1,x2,y2,x3,y3,
-            outline="cyan",
-            fill="",
+            outline="",
+            fill=rgb_to_hex(color),
             width=1,
             tags="model",
         )
