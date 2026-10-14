@@ -313,11 +313,11 @@ class RendererGUI:
         (draw_objects() is called automatically afterwards.)
         """
         global WIREFRAME
-        self.material = Material(params["base_color"],
-                                         params["kd"],
-                                         params["ks"],
-                                         params["ka"],
-                                         params["shininess"],)
+        self.material = Material(base_color = params["base_color"],
+                                         k_D=params["kd"],
+                                         K_S=params["ks"],
+                                         K_A=params["ka"],
+                                         specular_exponent= params["shininess"],)
 
         if params["blinn_phong"]: # True = Blinn-Phong, False = Phong
             self.shader_model = BlinnPhongModel()
@@ -345,7 +345,7 @@ class RendererGUI:
 
 
         elif(params["light_type"] == "Directional"):
-            direction = Vec4(params["light_vector"][0],params["light_vector"][1],params["light_vector"][2],1)
+            direction = Vec4(params["light_vector"][0],params["light_vector"][1],params["light_vector"][2],0)
             self.light = DirectionalLightSource(
                 intensity=params["light_intensity"],
                 direction=direction,

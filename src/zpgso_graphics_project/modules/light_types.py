@@ -35,7 +35,7 @@ class PointLightSource(LightSource):
         return self.intensity / (self.k_c + self.k_l*distance + self.k_q*distance*distance)
 
     def get_light_direction(self, point: Vec4) -> Vec4:
-        return  normalize(point - self.position)
+        return  normalize(point - self.position) # TODO: Ask if this is the right way but it doesnt correspond with what was given as source ,but this wasy works good with directional light else it d
 
 @dataclass
 class DirectionalLightSource(LightSource):
@@ -47,5 +47,6 @@ class DirectionalLightSource(LightSource):
         return self.intensity
 
     def get_light_direction(self, point: Vec4) -> Vec4:
-        return normalize(self.direction)
+        normalized_direction = normalize(self.direction)
+        return Vec4(-normalized_direction._vector[0],-normalized_direction._vector[1],-normalized_direction._vector[2],0)
 

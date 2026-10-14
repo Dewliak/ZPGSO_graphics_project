@@ -2,6 +2,24 @@
 
 A simple 3D renderer written in python, for ZPGSO class project
 
+## Project solution
+
+1. Created the neccessary Mat4, Vec4 and IndexedFaces types, later extended them a bit with neccesary operations for shading
+2. Created the transformations matrices, and also with the help of combine_transformation_matrices(transformations: List[Mat4]), a first projection pipeline was built out. In gui rendered with lines
+3. Added controls for transformation and reset
+4. extended Vec4, with normalize, cross_product, dot_product, and some operations inside Vec4
+5. Implemented back_culling with V = (0,0,1)
+6. Polygon, with color calculated from the center of the polygon with lightning
+7. Implemented the Blinn-Phong and Phong model + switch to swtich between them
+8. Added light controls for directional and point light
+9. Added material parameters in the model
+
+
+# Bonuses solved
+✓ Material properties (+5 %)
+✓ Lighting model switch (+10 %)
+✓ Light types (+15 %)
+
 ## Requirements
 
 - Python 3.11 or newer
