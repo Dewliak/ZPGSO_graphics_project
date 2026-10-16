@@ -24,6 +24,7 @@ class PointLightSource(LightSource):
                     I_0
         I_L = ---------------------
                 k_c + k_l*d + k_q+d^2
+        Convention: The light vector is calculated FROM object to point of light, so Light - Object
     """
     position: Vec4 # should make a check for w=1
     k_c: float
@@ -41,6 +42,9 @@ class PointLightSource(LightSource):
 class DirectionalLightSource(LightSource):
     """
     I_L = I_0
+    Convention: Since we are using the Light - Object convention with point, this vector initself means direction away from the center, 
+    to follow the same convention we are using the -vector, this way it will be the same. 
+    tldr.: It works the same way as the convention on the source images, in the project description, and wont change direction if we change from point to directional light.
     """
     direction: Vec4 # should make a check for w=0
     def calculate_intensity(self, point: Vec4) -> float:   
