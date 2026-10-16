@@ -33,8 +33,8 @@ A simple 3D renderer written in python, for ZPGSO class project
 Clone the repository and navigate to the project directory:
 
 ```bash
-git clone https://github.com/Dewliak/ZPGSO_graphics_project/tree/master
-cd zpgso-graphics-project
+git clone https://github.com/Dewliak/ZPGSO_graphics_project
+cd ZPGSO_graphics_project
 ```
 
 Install the project dependencies:
