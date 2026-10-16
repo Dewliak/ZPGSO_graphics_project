@@ -1,6 +1,10 @@
+# with the help of llm was the ui created, but the drawing, culling part was done without it
+
 import tkinter as tk
 from pathlib import Path
 from tkinter import colorchooser, filedialog, messagebox
+
+from enum import Enum, auto
 
 from .indexed_face import IndexedFace
 from .light_types import DirectionalLightSource, PointLightSource
@@ -27,6 +31,30 @@ WINDOW_T = 7.5
 WINDOW_B = 7.5
 
 WIREFRAME = False
+
+SCALE_TRANSFORMATION_MATRIX_DEFAULT = get_scaling_matrix(1,1,1)
+TRANSLATE_TRANSFORMATION_MATRIX_DEFAULT = get_translation_matrix(0,0,0)
+
+ROTATION_Z_TRANSFORMATION_MATRIX_DEFAULT = get_rotation_z_axis_matrix(0)
+ROTATION_Y_TRANSFORMATION_MATRIX_DEFAULT = get_rotation_y_axis_matrix(0)
+ROTATION_X_TRANSFORMATION_MATRIX_DEFAULT = get_rotation_x_axis_matrix(0)
+
+class ObjectTransform(Enum):
+    SCALE = auto()
+    TRANSLATE = auto()
+    ROTATE_Z = auto()
+    ROTATE_Y = auto()
+    ROTATE_X = auto()
+
+
+OBJECT_TRANSFORMATION_DICT = {
+    ObjectTransform.SCALE:  SCALE_TRANSFORMATION_MATRIX_DEFAULT,
+    ObjectTransform.TRANSLATE: TRANSLATE_TRANSFORMATION_MATRIX_DEFAULT,
+    ObjectTransform.ROTATE_Z: ROTATION_Z_TRANSFORMATION_MATRIX_DEFAULT,
+    ObjectTransform.ROTATE_Y: ROTATION_Y_TRANSFORMATION_MATRIX_DEFAULT,
+    ObjectTransform.ROTATE_X: ROTATION_X_TRANSFORMATION_MATRIX_DEFAULT,
+}
+
 
 OBJECT_TRANSFORMATION = get_identity_matrix()
 VIEW_TRANSFORMATION = combine_transformation_matrices([
@@ -391,14 +419,29 @@ class RendererGUI:
 
         points = []
 
+        print("DEBUG: ", OBJECT_TRANSFORMATION_DICT)
+
         for face in self.indexed_face.get_faces(): # type: ignore , its none only because its loaded 
             p1: Vec4 = vertices[face[0]]
             p2: Vec4 = vertices[face[1]]
             p3: Vec4 = vertices[face[2]]
 
-            p1 = VIEW_TRANSFORMATION * OBJECT_TRANSFORMATION * p1  # type: ignore
-            p2 = VIEW_TRANSFORMATION * OBJECT_TRANSFORMATION * p2  # type: ignore
-            p3 = VIEW_TRANSFORMATION * OBJECT_TRANSFORMATION * p3  # type: ignore
+
+            #based on convention M = S(k)T(t)𝑅_𝑧(𝑟𝑧)𝑅_𝑦(𝑟𝑦)𝑅_𝑥(𝑟𝑥) 
+            transformation_order = [
+                OBJECT_TRANSFORMATION_DICT[ObjectTransform.SCALE],
+                OBJECT_TRANSFORMATION_DICT[ObjectTransform.TRANSLATE],
+                OBJECT_TRANSFORMATION_DICT[ObjectTransform.ROTATE_Z],
+                OBJECT_TRANSFORMATION_DICT[ObjectTransform.ROTATE_Y],
+                OBJECT_TRANSFORMATION_DICT[ObjectTransform.ROTATE_X],
+                
+            ]
+            
+            object_transformation = combine_transformation_matrices(transformation_order)
+
+            p1 = VIEW_TRANSFORMATION * object_transformation * p1  # type: ignore
+            p2 = VIEW_TRANSFORMATION * object_transformation * p2  # type: ignore
+            p3 = VIEW_TRANSFORMATION * object_transformation * p3  # type: ignore
 
             # back-face culling
             N = normalize(cross_product(p2 - p1, p3 - p1))
@@ -483,27 +526,32 @@ class RendererGUI:
     # ------------------------------------------------------------------
     def translate(self):
         tx, ty, tz = float(self.tx.get()), float(self.ty.get()), float(self.tz.get())
-        self.apply_matrix(get_translation_matrix(tx, ty, tz))
+        OBJECT_TRANSFORMATION_DICT[ObjectTransform.TRANSLATE] = get_translation_matrix(tx, ty, tz)
+        self.apply_matrix()
 
     def rotate(self):
         rx, ry, rz = float(self.rx.get()), float(self.ry.get()), float(self.rz.get())
-        self.apply_matrix(combine_transformation_matrices([
-            get_rotation_x_axis_matrix(rx),
-            get_rotation_y_axis_matrix(ry),
-            get_rotation_z_axis_matrix(rz),
-        ]))
+
+        OBJECT_TRANSFORMATION_DICT[ObjectTransform.ROTATE_X] = get_rotation_x_axis_matrix(rx)
+        OBJECT_TRANSFORMATION_DICT[ObjectTransform.ROTATE_Y] = get_rotation_y_axis_matrix(ry)
+        OBJECT_TRANSFORMATION_DICT[ObjectTransform.ROTATE_Z] = get_rotation_z_axis_matrix(rz)
+        
+        self.apply_matrix()
+
 
     def scale_model(self):
         factor = float(self.scale.get())
-        self.apply_matrix(get_scaling_matrix(factor, factor, factor))
+        
+        OBJECT_TRANSFORMATION_DICT[ObjectTransform.SCALE] =  get_scaling_matrix(factor, factor, factor)
+        
+        self.apply_matrix()
 
-    def apply_matrix(self, matrix: Mat4):
-        global OBJECT_TRANSFORMATION
-        OBJECT_TRANSFORMATION = matrix * OBJECT_TRANSFORMATION
+    def apply_matrix(self):
+        # befora it was just multiplying over and over, but leaving this type of function
         self.draw_objects()
 
     def reset(self):
-        global OBJECT_TRANSFORMATION
+        
         for entry, value in (
             (self.tx, "0"), (self.ty, "0"), (self.tz, "0"),
             (self.rx, "0"), (self.ry, "0"), (self.rz, "0"),
@@ -512,5 +560,14 @@ class RendererGUI:
             entry.delete(0, tk.END)
             entry.insert(0, value)
 
-        OBJECT_TRANSFORMATION = get_identity_matrix()
+
+        OBJECT_TRANSFORMATION_DICT[ObjectTransform.ROTATE_X] = ROTATION_X_TRANSFORMATION_MATRIX_DEFAULT
+        OBJECT_TRANSFORMATION_DICT[ObjectTransform.ROTATE_Y] = ROTATION_Y_TRANSFORMATION_MATRIX_DEFAULT
+        OBJECT_TRANSFORMATION_DICT[ObjectTransform.ROTATE_Z] = ROTATION_Z_TRANSFORMATION_MATRIX_DEFAULT
+        
+        OBJECT_TRANSFORMATION_DICT[ObjectTransform.TRANSLATE] = TRANSLATE_TRANSFORMATION_MATRIX_DEFAULT
+
+        OBJECT_TRANSFORMATION_DICT[ObjectTransform.SCALE] = SCALE_TRANSFORMATION_MATRIX_DEFAULT
+            
+        
         self.draw_objects()
