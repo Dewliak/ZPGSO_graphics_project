@@ -1,20 +1,16 @@
 import tkinter as tk
-from tkinter import filedialog, messagebox, colorchooser
 from pathlib import Path
-from typing import Tuple, List
+from tkinter import colorchooser, filedialog, messagebox
 
-from .loader import load_obj_file
-from .mat4 import Mat4
-from .vec4 import Vec4, normalize, cross_product, dot_product
-from .transformation_matrices import *
 from .indexed_face import IndexedFace
-
-from .utilities import rgb_to_hex
-
-from .material import Material
 from .light_types import DirectionalLightSource, PointLightSource
 from .lightning_model import BlinnPhongModel, PhongModel
-
+from .loader import load_obj_file
+from .mat4 import Mat4
+from .material import Material
+from .transformation_matrices import *
+from .utilities import rgb_to_hex
+from .vec4 import Vec4, cross_product, dot_product, normalize
 
 SCREEN_WIDTH = 1250
 SCREEN_HEIGHT = 760
@@ -313,8 +309,8 @@ class RendererGUI:
         (draw_objects() is called automatically afterwards.)
         """
         global WIREFRAME
-        self.material = Material(base_color = params["base_color"],
-                                         k_D=params["kd"],
+        self.material = Material(color = params["base_color"],
+                                         K_D=params["kd"],
                                          K_S=params["ks"],
                                          K_A=params["ka"],
                                          specular_exponent= params["shininess"],)
@@ -390,7 +386,7 @@ class RendererGUI:
     # ------------------------------------------------------------------
     # Drawing (your code)
     # ------------------------------------------------------------------
-    def transform_points(self) -> List[Tuple[Vec4, Vec4, Vec4, Vec4, Vec4]]:  # p1,p2,p3, normal, center
+    def transform_points(self) -> list[tuple[Vec4, Vec4, Vec4, Vec4, Vec4]]:  # p1,p2,p3, normal, center
         vertices = self.indexed_face.get_vertices() # type: ignore
 
         points = []
@@ -422,7 +418,7 @@ class RendererGUI:
             p2 = PROJECTION_TRANSFORMATION * p2  # type: ignore
             p3 = PROJECTION_TRANSFORMATION * p3  # type: ignore
 
-            points.append(tuple([p1, p2, p3, N, center]))
+            points.append((p1, p2, p3, N, center))
 
         return points
 
@@ -454,7 +450,7 @@ class RendererGUI:
 
         self.canvas.create_line(x1, y1, x2, y2, fill=rgb_to_hex(self.material.color), width=LINE_WIDTH, tag="model")  # type: ignore
 
-    def draw_triangle(self, polygon: Tuple[Vec4, Vec4, Vec4, Vec4, Vec4]):
+    def draw_triangle(self, polygon: tuple[Vec4, Vec4, Vec4, Vec4, Vec4]):
         """
         points: p1,p2,p3, normal, center
         """

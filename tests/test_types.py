@@ -42,6 +42,16 @@ class TestVec4(unittest.TestCase):
 
         self.assertEqual(repr(v), "Vec4(1.00, 2.00, 3.00, 4.00)")
 
+    def test_matrix_vec_mul(self):
+        v = Vec4(1,2,3,0)
+        
+        M = Mat4(Vec4(1        ,0      ,0      ,2),
+                 Vec4(0        ,1      ,0      ,3),
+                 Vec4(0        ,0      ,1      ,2),
+                 Vec4(0        ,0      ,0      , 1))
+        
+        
+
 
 class TestMat4(unittest.TestCase):
 
