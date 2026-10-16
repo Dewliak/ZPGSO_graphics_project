@@ -55,8 +55,6 @@ OBJECT_TRANSFORMATION_DICT = {
     ObjectTransform.ROTATE_X: ROTATION_X_TRANSFORMATION_MATRIX_DEFAULT,
 }
 
-
-OBJECT_TRANSFORMATION = get_identity_matrix()
 VIEW_TRANSFORMATION = combine_transformation_matrices([
     get_camera_transformation_matrix(camera_pos=CAMERA_POSITION),  # transform for camera
 ])
