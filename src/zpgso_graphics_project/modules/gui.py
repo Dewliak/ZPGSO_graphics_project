@@ -417,8 +417,6 @@ class RendererGUI:
 
         points = []
 
-        print("DEBUG: ", OBJECT_TRANSFORMATION_DICT)
-
         for face in self.indexed_face.get_faces(): # type: ignore , its none only because its loaded 
             p1: Vec4 = vertices[face[0]]
             p2: Vec4 = vertices[face[1]]

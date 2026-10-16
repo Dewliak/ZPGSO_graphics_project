@@ -3,6 +3,7 @@ from .vec4 import Vec4
 
 def load_obj_file(filename:str) -> tuple[list[Vec4], list[tuple[int, int, int]]]:
     # accept only v and f lines
+    # ignore the types where there are textures, so "f 1/1/1 2/2/1 3/3/1"
 
     vertices:list[Vec4] = []
     faces:list[tuple[int,int,int]] = []
